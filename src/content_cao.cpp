@@ -1850,5 +1850,10 @@ std::string GenericCAO::debugInfoText()
 	return os.str();
 }
 
+std::string GenericCAO::infoText()
+{
+	return m_prop.infotext;
+}
+
 // Prototype
 GenericCAO proto_GenericCAO(NULL, NULL);
