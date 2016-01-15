@@ -143,6 +143,16 @@ class GUIFormSpecMenu : public GUIModalMenu
 		{
 		}
 		ImageDrawSpec(const std::string &a_name,
+				const std::string &a_item_name,
+				v2s32 a_pos, v2s32 a_geom):
+			name(a_name),
+			item_name (a_item_name),
+			pos(a_pos),
+			geom(a_geom)
+		{
+			scale = true;
+		}
+		ImageDrawSpec(const std::string &a_name,
 				v2s32 a_pos, v2s32 a_geom):
 			name(a_name),
 			pos(a_pos),
@@ -158,6 +168,7 @@ class GUIFormSpecMenu : public GUIModalMenu
 			scale = false;
 		}
 		std::string name;
+		std::string item_name;
 		v2s32 pos;
 		v2s32 geom;
 		bool scale;

@@ -140,6 +140,7 @@ private:
 	void drawItem(const ItemStack &item, const core::rect<s32>& rect, bool selected);
 
 	v2u32 m_screensize;
+	f32 m_animation_timer;
 	v2s32 m_displaycenter;
 	s32 m_hotbar_imagesize;
 	s32 m_padding;
@@ -151,7 +152,8 @@ void drawItemStack(video::IVideoDriver *driver,
 		const ItemStack &item,
 		const core::rect<s32> &rect,
 		const core::rect<s32> *clip,
-		IGameDef *gamedef);
+		IGameDef *gamedef,
+		bool selected);
 
 
 #endif

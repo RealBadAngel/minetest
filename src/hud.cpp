@@ -48,6 +48,7 @@ Hud::Hud(video::IVideoDriver *driver, scene::ISceneManager* smgr,
 	this->player      = player;
 	this->inventory   = inventory;
 
+	m_animation_timer  = 0;
 	m_screensize       = v2u32(0, 0);
 	m_displaycenter    = v2s32(0, 0);
 	m_hotbar_imagesize = floor(HOTBAR_IMAGE_SIZE * porting::getDisplayDensity() + 0.5);
@@ -154,7 +155,7 @@ void Hud::drawItem(const ItemStack &item, const core::rect<s32>& rect, bool sele
 		video::SColor bgcolor2(128, 0, 0, 0);
 		if (!use_hotbar_image)
 			driver->draw2DRectangle(bgcolor2, rect, NULL);
-		drawItemStack(driver, g_fontengine->getFont(), item, rect, NULL, gamedef);
+		drawItemStack(driver, g_fontengine->getFont(), item, rect, NULL, gamedef, selected);
 	}
 
 //NOTE: selectitem = 0 -> no selected; selectitem 1-based
@@ -489,16 +490,71 @@ void drawItemStack(video::IVideoDriver *driver,
 		const ItemStack &item,
 		const core::rect<s32> &rect,
 		const core::rect<s32> *clip,
-		IGameDef *gamedef)
+		IGameDef *gamedef,
+		bool selected)
 {
 	if(item.empty())
 		return;
-
+	u32 time_start = porting::getTimeNs();
+	
+	ITextureSource *tsrc = gamedef->getTextureSource();
+	
 	const ItemDefinition &def = item.getDefinition(gamedef->idef());
 	video::ITexture *texture = gamedef->idef()->getInventoryTexture(def.name, gamedef);
+	scene::IMesh* mesh = gamedef->idef()->getWieldMesh(def.name, gamedef);
+	if (mesh) {
+		core::rect<s32> oldViewPort = driver->getViewPort();
+		core::matrix4 oldProjMat = driver->getTransform(video::ETS_PROJECTION);
+		core::matrix4 oldViewMat = driver->getTransform(video::ETS_VIEW);
+		core::matrix4 ProjMatrix;
+		ProjMatrix.buildProjectionMatrixOrthoLH(2, 2, -1, 100); 
+		driver->setTransform(video::ETS_PROJECTION, ProjMatrix);
+		driver->setTransform(video::ETS_VIEW, ProjMatrix);
+		
+		core::matrix4 matrix;
+		matrix.makeIdentity();
+		u32 timer = porting::getTimeMs() % 100000;
+		float timer_f = (float)timer / 5000.0;
+		if (selected) 
+			matrix.setRotationDegrees(core::vector3df(0, 360 * timer_f, 0));
+		else 
+			matrix.setRotationDegrees(core::vector3df(0, 0, 0));
+		driver->setTransform(video::ETS_WORLD, matrix);
 
+		driver->setViewPort(rect);
+		
+		u32 mc = mesh->getMeshBufferCount();
+
+		
+		for (u32 j = 0; j < mc; j++) {
+			scene::IMeshBuffer *buf = mesh->getMeshBuffer(j);
+			video::SMaterial &material = buf->getMaterial();
+			material.MaterialType = video::EMT_TRANSPARENT_ALPHA_CHANNEL_REF;
+			material.Lighting = false;
+			driver->setMaterial(material);
+			driver->drawMeshBuffer(buf);
+		}
+		if (selected) {
+			scene::IMesh* halo_mesh = cloneMesh(mesh);
+			scaleMesh (halo_mesh, v3f(1.1, 1.1, 1.1));
+		
+		setMeshColor(halo_mesh, video::SColor (100, 128,128,128));
+		for (u32 j = 0; j < mc; j++) {
+				scene::IMeshBuffer *buf = halo_mesh->getMeshBuffer(j);
+				video::SMaterial material;
+				material.setTexture(0, tsrc->getTextureForMesh("halo.png"));
+				material.MaterialType = video::EMT_TRANSPARENT_ALPHA_CHANNEL_REF;
+				material.Lighting = false;
+				driver->setMaterial(material);
+				driver->drawMeshBuffer(buf);
+			}
+		}
+		driver->setTransform(video::ETS_VIEW, oldViewMat);
+		driver->setTransform(video::ETS_PROJECTION, oldProjMat);
+		driver->setViewPort(oldViewPort);
+	}
 	// Draw the inventory texture
-	if(texture != NULL)
+	if(0)
 	{
 		const video::SColor color(255,255,255,255);
 		const video::SColor colors[] = {color,color,color,color};
@@ -568,4 +624,6 @@ void drawItemStack(video::IVideoDriver *driver,
 		video::SColor color(255,255,255,255);
 		font->draw(text.c_str(), rect2, color, false, false, clip);
 	}
+	u32 time_end = porting::getTimeNs();
+	//dstream<<(time_end-time_start)/1000<<std::endl;
 }
