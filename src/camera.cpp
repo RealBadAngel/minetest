@@ -87,6 +87,7 @@ Camera::Camera(scene::ISceneManager* smgr, MapDrawControl& draw_control,
 	m_headnode = smgr->addEmptySceneNode(m_playernode);
 	m_cameranode = smgr->addCameraSceneNode(smgr->getRootSceneNode());
 	m_cameranode->bindTargetAndRotation(true);
+	m_cameranode->setNearValue(10.0);
 
 	// This needs to be in its own scene manager. It is drawn after
 	// all other 3D scene nodes and before the GUI.
