@@ -37,7 +37,8 @@ void irr::video::irrPP::render(irr::video::ITexture* input,
 	irr::u32 numActiveEffects = getActiveEffectCount();
 
 	// first, let's order all the active effects
-	EffectEntry orderedEffects[numActiveEffects];
+	//EffectEntry orderedEffects[numActiveEffects];  
+	EffectEntry* orderedEffects = (EffectEntry*)alloca(sizeof(EffectEntry) * (numActiveEffects));
 
 	irr::u32 effectCounter = 0;
 	irr::video::ITexture* usedRTT = input, *freeRTT;
